@@ -1,4 +1,4 @@
-# tlsnotary systemd enabled container <> notarybuildserver.azurecr.io/sgx/dcap:latest
+# tlsnotary systemd enabled container <> notaryserverbuilds.azurecr.io/base/ubuntu23-systemd
 ## run out-of-process quotes using the architectural enclave service manager [aesm] : QE / LE / PE
 ### https://download.01.org/intel-sgx/sgx-dcap/1.10/linux/docs/Intel_SGX_ECDSA_QuoteLibReference_DCAP_API.pdf
 
