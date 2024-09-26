@@ -2,7 +2,7 @@
 ## run out-of-process quotes using the architectural enclave service manager [aesm] : QE / LE / PE
 ### https://download.01.org/intel-sgx/sgx-dcap/1.10/linux/docs/Intel_SGX_ECDSA_QuoteLibReference_DCAP_API.pdf
 
-FROM    sgx-base:latest
+FROM    notaryserverbuilds.azurecr.io/base/ubuntu23-systemd:latest
 ENV     REMOVE_SECURETTY="True"
 RUN     if [ "$REMOVE_SECURETTY" = "True" ]; then rm -rf /etc/securetty; fi
 ENV     DEBIAN_FRONTEND=noninteractive
