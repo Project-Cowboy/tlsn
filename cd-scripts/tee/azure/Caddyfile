@@ -6,12 +6,7 @@
 {
   key_type p256
   email mac@pse.dev # for acme
-  servers {
-    metrics
-  }
-  log {
-    output stdout
-    format console {
+	@@ -10,6 +15,76 @@
       time_format common_log
       time_local
     }
