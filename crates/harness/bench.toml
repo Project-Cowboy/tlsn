@@ -1,0 +1,93 @@
+[[benches]]
+name = "warm_up"
+latency = 10
+upload = 1000
+download = 1000
+upload-size = 1024
+download-size = 4096
+defer-decryption = true
+memory-profile = false
+
+[[benches]]
+name = "latency"
+latency = [20, 50, 100]
+upload = 1000
+download = 1000
+upload-size = 1024
+download-size = 4096
+defer-decryption = true
+memory-profile = false
+
+[[benches]]
+name = "download_bandwidth_10"
+latency = 50
+upload = 10
+download = 10
+upload-size = 1024
+download-size = 4096
+defer-decryption = true
+memory-profile = false
+
+[[benches]]
+name = "download_bandwidth_50"
+latency = 50
+upload = 50
+download = 50
+upload-size = 1024
+download-size = 4096
+defer-decryption = true
+memory-profile = false
+
+[[benches]]
+name = "download_bandwidth_100"
+latency = 50
+upload = 100
+download = 100
+upload-size = 1024
+download-size = 4096
+defer-decryption = true
+memory-profile = false
+
+[[benches]]
+name = "download_bandwidth_250"
+latency = 50
+upload = 250
+download = 250
+upload-size = 1024
+download-size = 4096
+defer-decryption = true
+memory-profile = false
+
+[[benches]]
+name = "download_bandwidth_1000"
+latency = 50
+upload = 1000
+download = 1000
+upload-size = 1024
+download-size = 4096
+defer-decryption = true
+memory-profile = false
+
+# [[benches]]
+# name = "upload_bandwidth"
+# upload = [10, 25, 50, 100, 250]
+# upload-delay = 25
+# download = 250
+# download-delay = 25
+# upload-size = 1024
+# download-size = 4096
+# defer-decryption = [false, true]
+# memory-profile = false
+
+# [[benches]]
+# name = "download_volume"
+# upload = 250
+# upload-delay = 25
+# download = 250
+# download-delay = 25
+# upload-size = 1024
+# # Setting download-size higher than 45000 will cause a `Maximum call stack size exceeded`
+# # error in the browser.
+# download-size = [1024, 4096, 16384, 45000]
+# defer-decryption = true
+# memory-profile = true
