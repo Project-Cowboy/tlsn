@@ -38,6 +38,9 @@ resolver = "2"
 inherits = "release"
 opt-level = 1
 
+[patch.crates-io]
+web-spawn = { git = "https://github.com/tlsnotary/tlsn-utils", branch = "fix/webspawn" }
+
 [workspace.dependencies]
 notary-client = { path = "crates/notary/client" }
 notary-server = { path = "crates/notary/server" }
