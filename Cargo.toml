@@ -126,7 +126,7 @@ rand_chacha = { version = "0.3" }
 rand_core = { version = "0.6" }
 rayon = { version = "1.10" }
 regex = { version = "1.10" }
-ring = { version = "0.17" }
+ring = { version = "0.17.8" }
 rs_merkle = { git = "https://github.com/tlsnotary/rs-merkle.git", rev = "85f3e82" }
 rstest = { version = "0.17" }
 rustls = { version = "0.21" }
