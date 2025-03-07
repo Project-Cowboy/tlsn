@@ -49,7 +49,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["time"] }
 tracing-web = { version = "0.1" }
 tsify-next = { version = "0.5", default-features = false, features = ["js"] }
-wasm-bindgen = { version = "=0.2.92" }
+wasm-bindgen = { version = "0.2" }
 wasm-bindgen-futures = { version = "0.4" }
 web-spawn = { workspace = true }
 # Use the patched ws_stream_wasm to fix the issue https://github.com/najamelan/ws_stream_wasm/issues/12#issuecomment-1711902958
