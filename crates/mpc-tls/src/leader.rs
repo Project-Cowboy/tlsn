@@ -157,7 +157,7 @@ impl MpcTlsLeader {
             keys.server_iv,
         )?;
 
-        prf.set_client_random(&mut (*vm_lock), Some(client_random.0))?;
+        prf.set_client_random(Some(client_random.0))?;
 
         let cf_vd = vm_lock.decode(cf_vd).map_err(MpcTlsError::alloc)?;
         let sf_vd = vm_lock.decode(sf_vd).map_err(MpcTlsError::alloc)?;
@@ -408,7 +408,6 @@ impl Backend for MpcTlsLeader {
     async fn set_server_random(&mut self, random: Random) -> Result<(), BackendError> {
         let State::Handshake {
             ctx,
-            vm,
             prf,
             server_random,
             ..
@@ -426,13 +425,7 @@ impl Backend for MpcTlsLeader {
             .await
             .map_err(MpcTlsError::from)?;
 
-        let mut vm = vm
-            .try_lock()
-            .map_err(|_| MpcTlsError::other("VM lock is held"))?;
-
-        prf.set_server_random(&mut (*vm), random.0)
-            .map_err(MpcTlsError::hs)?;
-
+        prf.set_server_random(random.0).map_err(MpcTlsError::hs)?;
         *server_random = Some(random);
 
         Ok(())
@@ -543,7 +536,7 @@ impl Backend for MpcTlsLeader {
         let mut vm = vm
             .try_lock()
             .map_err(|_| MpcTlsError::other("VM lock is held"))?;
-        prf.set_sf_hash(&mut (*vm), hash).map_err(MpcTlsError::hs)?;
+        prf.set_sf_hash(hash).map_err(MpcTlsError::hs)?;
 
         vm.execute_all(ctx).await.map_err(MpcTlsError::hs)?;
 
@@ -586,7 +579,7 @@ impl Backend for MpcTlsLeader {
         let mut vm = vm
             .try_lock()
             .map_err(|_| MpcTlsError::hs("VM lock is held"))?;
-        prf.set_cf_hash(&mut (*vm), hash).map_err(MpcTlsError::hs)?;
+        prf.set_cf_hash(hash).map_err(MpcTlsError::hs)?;
 
         vm.execute_all(ctx).await.map_err(MpcTlsError::hs)?;
 

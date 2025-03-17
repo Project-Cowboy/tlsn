@@ -123,7 +123,8 @@ impl MpcTlsFollower {
                 keys.server_iv,
             )?;
 
-            prf.set_client_random(vm, None)?;
+            // TODO: Follower needs to set client random now, since it is now public.
+            prf.set_client_random(None)?;
 
             let cf_vd = vm.decode(cf_vd).map_err(MpcTlsError::alloc)?;
             let sf_vd = vm.decode(sf_vd).map_err(MpcTlsError::alloc)?;
@@ -242,12 +243,7 @@ impl MpcTlsFollower {
                         return Err(MpcTlsError::hs("server random already set"));
                     }
 
-                    let mut vm = vm
-                        .try_lock()
-                        .map_err(|_| MpcTlsError::other("VM lock is held"))?;
-
-                    prf.set_server_random(&mut (*vm), random.random)?;
-
+                    prf.set_server_random(random.random)?;
                     server_random = Some(random);
                 }
                 Message::SetServerKey(key) => {
@@ -290,7 +286,7 @@ impl MpcTlsFollower {
                         .try_lock()
                         .map_err(|_| MpcTlsError::other("VM lock is held"))?;
 
-                    prf.set_cf_hash(&mut (*vm), vd.handshake_hash)?;
+                    prf.set_cf_hash(vd.handshake_hash)?;
 
                     vm.execute_all(&mut self.ctx)
                         .await
@@ -312,7 +308,7 @@ impl MpcTlsFollower {
                         .try_lock()
                         .map_err(|_| MpcTlsError::other("VM lock is held"))?;
 
-                    prf.set_sf_hash(&mut (*vm), vd.handshake_hash)?;
+                    prf.set_sf_hash(vd.handshake_hash)?;
 
                     vm.execute_all(&mut self.ctx)
                         .await
