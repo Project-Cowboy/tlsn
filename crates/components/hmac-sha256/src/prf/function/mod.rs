@@ -1,24 +1,137 @@
-//! Provides [`PrfFunction`], for computing the TLS 1.2 PRF.
-//!
-//! If the feature flag `local-hash` is set, provides an implementation
-//! which computes some hashes locally.
+//! Provides [`Prf`], for computing the TLS 1.2 PRF.
 
-#[cfg(not(feature = "local-hash"))]
-mod interactive;
-#[cfg(not(feature = "local-hash"))]
-pub(crate) use interactive::PrfFunction;
+use crate::{Config, PrfError};
+use mpz_vm_core::{
+    memory::{
+        binary::{Binary, U32},
+        Array,
+    },
+    Vm,
+};
 
-#[cfg(feature = "local-hash")]
 mod local;
-#[cfg(feature = "local-hash")]
-pub(crate) use local::PrfFunction;
+mod mpc;
+
+#[derive(Debug)]
+pub(crate) enum Prf {
+    Local(local::PrfFunction),
+    Mpc(mpc::PrfFunction),
+}
+
+impl Prf {
+    pub(crate) fn alloc_master_secret(
+        config: Config,
+        vm: &mut dyn Vm<Binary>,
+        outer_partial: Array<U32, 8>,
+        inner_partial: Array<U32, 8>,
+    ) -> Result<Self, PrfError> {
+        let prf = match config {
+            Config::Local => Self::Local(local::PrfFunction::alloc_master_secret(
+                vm,
+                outer_partial,
+                inner_partial,
+            )?),
+            Config::Mpc => Self::Mpc(mpc::PrfFunction::alloc_master_secret(
+                vm,
+                outer_partial,
+                inner_partial,
+            )?),
+        };
+        Ok(prf)
+    }
+
+    pub(crate) fn alloc_key_expansion(
+        config: Config,
+        vm: &mut dyn Vm<Binary>,
+        outer_partial: Array<U32, 8>,
+        inner_partial: Array<U32, 8>,
+    ) -> Result<Self, PrfError> {
+        let prf = match config {
+            Config::Local => Self::Local(local::PrfFunction::alloc_key_expansion(
+                vm,
+                outer_partial,
+                inner_partial,
+            )?),
+            Config::Mpc => Self::Mpc(mpc::PrfFunction::alloc_key_expansion(
+                vm,
+                outer_partial,
+                inner_partial,
+            )?),
+        };
+        Ok(prf)
+    }
+
+    pub(crate) fn alloc_client_finished(
+        config: Config,
+        vm: &mut dyn Vm<Binary>,
+        outer_partial: Array<U32, 8>,
+        inner_partial: Array<U32, 8>,
+    ) -> Result<Self, PrfError> {
+        let prf = match config {
+            Config::Local => Self::Local(local::PrfFunction::alloc_client_finished(
+                vm,
+                outer_partial,
+                inner_partial,
+            )?),
+            Config::Mpc => Self::Mpc(mpc::PrfFunction::alloc_client_finished(
+                vm,
+                outer_partial,
+                inner_partial,
+            )?),
+        };
+        Ok(prf)
+    }
+
+    pub(crate) fn alloc_server_finished(
+        config: Config,
+        vm: &mut dyn Vm<Binary>,
+        outer_partial: Array<U32, 8>,
+        inner_partial: Array<U32, 8>,
+    ) -> Result<Self, PrfError> {
+        let prf = match config {
+            Config::Local => Self::Local(local::PrfFunction::alloc_server_finished(
+                vm,
+                outer_partial,
+                inner_partial,
+            )?),
+            Config::Mpc => Self::Mpc(mpc::PrfFunction::alloc_server_finished(
+                vm,
+                outer_partial,
+                inner_partial,
+            )?),
+        };
+        Ok(prf)
+    }
+
+    pub(crate) fn make_progress(&mut self, vm: &mut dyn Vm<Binary>) -> Result<bool, PrfError> {
+        match self {
+            Prf::Local(prf) => prf.make_progress(vm),
+            Prf::Mpc(prf) => prf.make_progress(vm),
+        }
+    }
+
+    pub(crate) fn set_start_seed(&mut self, seed: Vec<u8>) {
+        match self {
+            Prf::Local(prf) => prf.set_start_seed(seed),
+            Prf::Mpc(prf) => prf.set_start_seed(seed),
+        }
+    }
+
+    pub(crate) fn output(&self) -> Vec<Array<U32, 8>> {
+        match self {
+            Prf::Local(prf) => prf.output(),
+            Prf::Mpc(prf) => prf.output(),
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use crate::{
         convert_to_bytes,
-        prf::{compute_partial, function::PrfFunction},
+        prf::{compute_partial, function::Prf},
         test_utils::{mock_vm, phash},
+        Config,
     };
     use mpz_common::context::test_st_context;
     use mpz_vm_core::{
@@ -30,14 +143,25 @@ mod tests {
     const OPAD: [u8; 64] = [0x5c; 64];
 
     #[tokio::test]
-    async fn test_phash() {
+    async fn test_phash_local() {
+        let config = Config::Local;
+        test_phash(config).await;
+    }
+
+    #[tokio::test]
+    async fn test_phash_mpc() {
+        let config = Config::Local;
+        test_phash(config).await;
+    }
+
+    async fn test_phash(config: Config) {
         let (mut ctx_a, mut ctx_b) = test_st_context(8);
         let (mut leader, mut follower) = mock_vm();
 
         let key: [u8; 32] = std::array::from_fn(|i| i as u8);
         let start_seed: Vec<u8> = vec![42; 64];
 
-        let mut label_seed = PrfFunction::MS_LABEL.to_vec();
+        let mut label_seed = b"master secret".to_vec();
         label_seed.extend_from_slice(&start_seed);
         let iterations = 2;
 
@@ -49,7 +173,8 @@ mod tests {
         let outer_partial_leader = compute_partial(&mut leader, leader_key.into(), OPAD).unwrap();
         let inner_partial_leader = compute_partial(&mut leader, leader_key.into(), IPAD).unwrap();
 
-        let mut prf_leader = PrfFunction::alloc_master_secret(
+        let mut prf_leader = Prf::alloc_master_secret(
+            config,
             &mut leader,
             outer_partial_leader,
             inner_partial_leader,
@@ -73,7 +198,8 @@ mod tests {
         let inner_partial_follower =
             compute_partial(&mut follower, follower_key.into(), IPAD).unwrap();
 
-        let mut prf_follower = PrfFunction::alloc_master_secret(
+        let mut prf_follower = Prf::alloc_master_secret(
+            config,
             &mut follower,
             outer_partial_follower,
             inner_partial_follower,

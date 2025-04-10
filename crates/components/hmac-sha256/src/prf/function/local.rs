@@ -1,3 +1,5 @@
+//! Computes some hashes of the PRF locally.
+
 use crate::{convert_to_bytes, hmac::HmacSha256, sha256::sha256, PrfError};
 use mpz_vm_core::{
     memory::{
@@ -16,10 +18,10 @@ pub(crate) struct PrfFunction {
 }
 
 impl PrfFunction {
-    pub(crate) const MS_LABEL: &[u8] = b"master secret";
-    pub(crate) const KEY_LABEL: &[u8] = b"key expansion";
-    pub(crate) const CF_LABEL: &[u8] = b"client finished";
-    pub(crate) const SF_LABEL: &[u8] = b"server finished";
+    const MS_LABEL: &[u8] = b"master secret";
+    const KEY_LABEL: &[u8] = b"key expansion";
+    const CF_LABEL: &[u8] = b"client finished";
+    const SF_LABEL: &[u8] = b"server finished";
 
     pub(crate) fn alloc_master_secret(
         vm: &mut dyn Vm<Binary>,

@@ -9,6 +9,9 @@ mod sha256;
 #[cfg(test)]
 mod test_utils;
 
+mod config;
+pub use config::Config;
+
 mod error;
 pub use error::PrfError;
 
@@ -41,7 +44,6 @@ pub struct SessionKeys {
     pub server_iv: Array<U8, 4>,
 }
 
-#[cfg(any(test, feature = "local-hash"))]
 fn convert_to_bytes(input: [u32; 8]) -> [u8; 32] {
     let mut output = [0_u8; 32];
     for (k, byte_chunk) in input.iter().enumerate() {
@@ -55,7 +57,7 @@ fn convert_to_bytes(input: [u32; 8]) -> [u8; 32] {
 mod tests {
     use crate::{
         test_utils::{mock_vm, prf_cf_vd, prf_keys, prf_ms, prf_sf_vd},
-        MpcPrf, SessionKeys,
+        Config, MpcPrf, SessionKeys,
     };
     use mpz_common::context::test_st_context;
     use mpz_vm_core::{
@@ -65,7 +67,18 @@ mod tests {
     use rand::{rngs::StdRng, Rng, SeedableRng};
 
     #[tokio::test]
-    async fn test_prf() {
+    async fn test_prf_local() {
+        let config = Config::Local;
+        test_prf(config).await;
+    }
+
+    #[tokio::test]
+    async fn test_prf_mpc() {
+        let config = Config::Mpc;
+        test_prf(config).await;
+    }
+
+    async fn test_prf(config: Config) {
         let mut rng = StdRng::seed_from_u64(1);
         // Test input
         let pms: [u8; 32] = rng.random();
@@ -106,8 +119,8 @@ mod tests {
         follower.assign(follower_pms, pms).unwrap();
         follower.commit(follower_pms).unwrap();
 
-        let mut leader_prf = MpcPrf::default();
-        let mut follower_prf = MpcPrf::default();
+        let mut leader_prf = MpcPrf::new(config);
+        let mut follower_prf = MpcPrf::new(config);
 
         let leader_prf_out = leader_prf.alloc(&mut leader, leader_pms).unwrap();
         let follower_prf_out = follower_prf.alloc(&mut follower, follower_pms).unwrap();

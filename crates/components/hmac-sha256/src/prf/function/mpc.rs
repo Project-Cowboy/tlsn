@@ -1,3 +1,5 @@
+//! Computes the whole PRF in MPC.
+
 use crate::{hmac::HmacSha256, sha256::Sha256, PrfError};
 use mpz_circuits::CircuitBuilder;
 use mpz_vm_core::{
@@ -19,10 +21,10 @@ pub(crate) struct PrfFunction {
 }
 
 impl PrfFunction {
-    pub(crate) const MS_LABEL: &[u8] = b"master secret";
-    pub(crate) const KEY_LABEL: &[u8] = b"key expansion";
-    pub(crate) const CF_LABEL: &[u8] = b"client finished";
-    pub(crate) const SF_LABEL: &[u8] = b"server finished";
+    const MS_LABEL: &[u8] = b"master secret";
+    const KEY_LABEL: &[u8] = b"key expansion";
+    const CF_LABEL: &[u8] = b"client finished";
+    const SF_LABEL: &[u8] = b"server finished";
 
     pub(crate) fn alloc_master_secret(
         vm: &mut dyn Vm<Binary>,

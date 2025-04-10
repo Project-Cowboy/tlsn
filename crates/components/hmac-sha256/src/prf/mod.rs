@@ -1,4 +1,4 @@
-use crate::{sha256::Sha256, PrfError, PrfOutput, SessionKeys};
+use crate::{sha256::Sha256, Config, PrfError, PrfOutput, SessionKeys};
 use mpz_circuits::{circuits::xor, Circuit, CircuitBuilder};
 use mpz_vm_core::{
     memory::{
@@ -13,26 +13,33 @@ use tracing::instrument;
 mod state;
 use state::State;
 
-mod function;
-use function::PrfFunction;
+pub(crate) mod function;
+use function::Prf;
 
 /// MPC PRF for computing TLS 1.2 HMAC-SHA256 PRF.
 #[derive(Debug)]
 pub struct MpcPrf {
+    config: Config,
     state: State,
     circuits: Option<Circuits>,
 }
 
 impl Default for MpcPrf {
     fn default() -> Self {
-        Self::new()
+        let config = Config::default();
+        Self::new(config)
     }
 }
 
 impl MpcPrf {
     /// Creates a new instance of the PRF.
-    pub fn new() -> MpcPrf {
+    ///
+    /// # Arguments
+    ///
+    /// `config` - The PRF config.
+    pub fn new(config: Config) -> MpcPrf {
         Self {
+            config,
             state: State::Initialized,
             circuits: None,
         }
@@ -54,7 +61,7 @@ impl MpcPrf {
             return Err(PrfError::state("PRF not in initialized state"));
         };
 
-        let circuits = Circuits::alloc(vm, pms.into())?;
+        let circuits = Circuits::alloc(self.config, vm, pms.into())?;
 
         let keys = circuits.get_session_keys(vm)?;
         let cf_vd = circuits.get_client_finished_vd(vm)?;
@@ -214,22 +221,22 @@ impl MpcPrf {
 /// Contains the respective [`PrfFunction`]s.
 #[derive(Debug)]
 struct Circuits {
-    pub(crate) master_secret: PrfFunction,
-    pub(crate) key_expansion: PrfFunction,
-    pub(crate) client_finished: PrfFunction,
-    pub(crate) server_finished: PrfFunction,
+    pub(crate) master_secret: Prf,
+    pub(crate) key_expansion: Prf,
+    pub(crate) client_finished: Prf,
+    pub(crate) server_finished: Prf,
 }
 
 impl Circuits {
     const IPAD: [u8; 64] = [0x36; 64];
     const OPAD: [u8; 64] = [0x5c; 64];
 
-    fn alloc(vm: &mut dyn Vm<Binary>, pms: Vector<U8>) -> Result<Self, PrfError> {
+    fn alloc(config: Config, vm: &mut dyn Vm<Binary>, pms: Vector<U8>) -> Result<Self, PrfError> {
         let outer_partial_pms = compute_partial(vm, pms, Self::OPAD)?;
         let inner_partial_pms = compute_partial(vm, pms, Self::IPAD)?;
 
         let master_secret =
-            PrfFunction::alloc_master_secret(vm, outer_partial_pms, inner_partial_pms)?;
+            Prf::alloc_master_secret(config, vm, outer_partial_pms, inner_partial_pms)?;
         let ms = master_secret.output();
         let ms = merge_outputs(vm, ms, 48)?;
 
@@ -238,17 +245,20 @@ impl Circuits {
 
         let circuits = Self {
             master_secret,
-            key_expansion: PrfFunction::alloc_key_expansion(
+            key_expansion: Prf::alloc_key_expansion(
+                config,
                 vm,
                 outer_partial_ms,
                 inner_partial_ms,
             )?,
-            client_finished: PrfFunction::alloc_client_finished(
+            client_finished: Prf::alloc_client_finished(
+                config,
                 vm,
                 outer_partial_ms,
                 inner_partial_ms,
             )?,
-            server_finished: PrfFunction::alloc_server_finished(
+            server_finished: Prf::alloc_server_finished(
+                config,
                 vm,
                 outer_partial_ms,
                 inner_partial_ms,

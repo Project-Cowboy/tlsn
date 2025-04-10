@@ -11,10 +11,6 @@ edition = "2021"
 [lib]
 name = "hmac_sha256"
 
-[features]
-default = ["local-hash"]
-local-hash = []
-
 [dependencies]
 mpz-vm-core = { workspace = true }
 mpz-core = { workspace = true }
