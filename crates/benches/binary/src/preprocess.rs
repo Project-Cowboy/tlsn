@@ -1,4 +1,4 @@
-use hmac_sha256::MpcPrf;
+use hmac_sha256::{Config, MpcPrf};
 use mpz_garble::protocol::semihonest::{Evaluator, Garbler};
 use mpz_ot::ideal::cot::{ideal_cot, IdealCOTReceiver, IdealCOTSender};
 use mpz_vm_core::memory::{binary::U8, correlated::Delta, Array, MemoryExt};
@@ -8,7 +8,7 @@ pub async fn preprocess_prf_circuits() {
     let (mut garbler, _) = mock_vm();
     let pms: Array<U8, 32> = garbler.alloc().unwrap();
 
-    let mut prf = MpcPrf::default();
+    let mut prf = MpcPrf::new(Config::default());
     prf.alloc(&mut garbler, pms).unwrap();
 }
 

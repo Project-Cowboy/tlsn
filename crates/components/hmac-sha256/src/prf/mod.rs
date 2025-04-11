@@ -24,13 +24,6 @@ pub struct MpcPrf {
     circuits: Option<Circuits>,
 }
 
-impl Default for MpcPrf {
-    fn default() -> Self {
-        let config = Config::default();
-        Self::new(config)
-    }
-}
-
 impl MpcPrf {
     /// Creates a new instance of the PRF.
     ///
