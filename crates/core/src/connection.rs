@@ -202,7 +202,7 @@ impl_domain_separator!(ServerEphemKey);
 
 impl ServerEphemKey {
     /// Encodes the key exchange parameters as in TLS.
-    pub(crate) fn kx_params(&self) -> Vec<u8> {
+    pub fn kx_params(&self) -> Vec<u8> {
         let group = match self.typ {
             KeyType::SECP256R1 => NamedGroup::secp256r1,
         };

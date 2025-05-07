@@ -15,7 +15,8 @@ use crate::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerIdentityProof {
     name: ServerName,
-    opening: ServerCertOpening,
+    /// Server identity opening
+    pub opening: ServerCertOpening,
 }
 
 impl ServerIdentityProof {

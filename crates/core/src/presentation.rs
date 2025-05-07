@@ -41,7 +41,8 @@ use crate::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Presentation {
     attestation: AttestationProof,
-    identity: Option<ServerIdentityProof>,
+    /// Presentation identity
+    pub identity: Option<ServerIdentityProof>,
     transcript: Option<TranscriptProof>,
 }
 

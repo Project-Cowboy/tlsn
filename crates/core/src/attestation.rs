@@ -130,8 +130,10 @@ impl_domain_separator!(Header);
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Body {
     verifying_key: Field<VerifyingKey>,
-    connection_info: Field<ConnectionInfo>,
-    server_ephemeral_key: Field<ServerEphemKey>,
+    /// Connection info
+    pub connection_info: Field<ConnectionInfo>,
+    /// server ephemeral key
+    pub server_ephemeral_key: Field<ServerEphemKey>,
     cert_commitment: Field<ServerCertCommitment>,
     encoding_commitment: Option<Field<EncodingCommitment>>,
     plaintext_hashes: Index<Field<PlaintextHash>>,
@@ -206,7 +208,7 @@ impl Body {
     }
 
     /// Returns the connection information.
-    pub(crate) fn connection_info(&self) -> &ConnectionInfo {
+    pub fn connection_info(&self) -> &ConnectionInfo {
         &self.connection_info.data
     }
 
